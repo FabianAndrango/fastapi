@@ -1,5 +1,5 @@
 from model.user import User
-from .init import (curs, IntegrityError)
+from .init import (curs, IntegrityError,conn)
 from error import Missing, Duplicate
 
 curs.execute("""create table if not exists
@@ -44,6 +44,7 @@ def create(user: User, table:str = "user") -> User:
     params = model_to_dict(user)
     try:
         curs.execute(qry, params)
+        conn.commit()
     except IntegrityError:
         raise Duplicate(msg=
             f"{table}: user {user.name} already exists")
@@ -59,6 +60,7 @@ def modify(name: str, user: User)  -> User:
         "name0": name}
     curs.execute(qry, params)
     if curs.rowcount == 1:
+        conn.commit()
         return get_one(user.name)
     else:
         raise Missing(msg=f"User {name} not found")
@@ -72,3 +74,4 @@ def delete(name: str) -> None:
     if curs.rowcount != 1:
         raise Missing(msg=f"User {name} not found")
     create(user, table="xuser")
+    conn.commit()

@@ -46,7 +46,7 @@ def get_current_user(token: str) -> User | None:
     
 def lookup_user(name: str) -> User | None:
     """Return a matching User fron the database for <name>"""
-    if (user := data.get(name)):
+    if (user := data.get_one(name)):
         return user
     return None
 
@@ -63,7 +63,7 @@ def create_access_token(data: dict,
 ):
     """Return a JWT access token"""
     src = data.copy()
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
     expires = expires or datetime.timedelta(minutes=TOKEN_EXPIRES)
     src.update({"exp": now + expires})
     encoded_jwt = jwt.encode(src, SECRET_KEY, algorithm=ALGORITHM)
@@ -78,6 +78,9 @@ def get_one(name) -> User:
     return data.get_one(name)
 
 def create(user: User) -> User:
+    plain_password = user.hash
+    hashed_password = get_hash(plain_password)
+    user.hash = hashed_password
     return data.create(user)
 
 def modify(name: str, user: User) -> User:
